@@ -1,29 +1,26 @@
-# DQN-Atari-Tensorflow
+# Deep Q Network with Pygame Learning Environment-Tensorflow
 
-Reimplementing "Human-Level Control Through Deep Reinforcement Learning" in Tensorflow
+Implementation of the deep neural net first introduced by DeepMind to play Atari game to allow it to use the PLE framework on Tensorflow
 
-This may be the simplest implementation of DQN to play Atari Games.
+The repository can be opened as a PyCharm Project directly
 
-The pretrained network would release soon! 
+## Dependencies
 
-## Prerequsite
+1. Tensorflow (tested on 1.0) + Nvidia GPU
+2. Python 3.5
+3. Pygame Learning Environment + Pygame
+4. opencv3
+5. Numpy
 
-1. Tensorflow (prefer with GPU CUDA supported)
-2. opencv2
-3. Arcade Learning Environment ( https://github.com/mgbellemare/Arcade-Learning-Environment )
-
-## Setup and Run
-
-```
-git clone https://github.com/songrotek/DQN-Atari-Tensorflow.git
-
-cd DQN-Atari-Tensorflow
-python AtariDQN.py
+## Running the code
 
 ```
 
-## Reference
-1. [asrivat1/DeepLearningVideoGames](https://github.com/asrivat1/DeepLearningVideoGames)
-2. [gliese581gg/DQN_tensorflow](https://github.com/gliese581gg/DQN_tensorflow)
+python runDQN.py
 
+Tensorboard logs will be saved in the ./saved folder and networks in the ./saved/
 
+```
+
+## References
+1. [songrotek/DQN-Atari-Tensorflow] (https://github.com/songrotek/DQN-Atari-Tensorflow)
