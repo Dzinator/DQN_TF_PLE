@@ -16,7 +16,7 @@ class Aigent(object):
         if bool(random.getrandbits(1)):
             return self.actions[0]
         else:
-            return self.actions[1]
+            return self.actions[0]
 
 
 game = Pixelcopter(height=80, width=80)
@@ -33,6 +33,6 @@ for i in tqdm(range(50000)):
     observation = p.getScreenGrayscale()
 
     action = agent.pickAction(reward, observation)
-    if random.randrange(10) == 1:
-        reward = p.act(action)
+    print(action)
+    reward = p.act(action)
 

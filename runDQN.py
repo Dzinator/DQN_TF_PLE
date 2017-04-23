@@ -18,8 +18,11 @@ def preprocess(observation):
 def playGame():
     # 1 - init game
     game = Pixelcopter(height=84, width=84)
-    #game = Pong()
-    p = PLE(game, fps=30, display_screen=True)
+    #game = Pong(height=84, width=84)
+    p = PLE(game, fps=60, display_screen=True, reward_values={
+        "positive": 2.0,
+        "tick": 0.1
+    })
     p.init()
 
     # 2 - init DQN agent
