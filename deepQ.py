@@ -10,11 +10,11 @@ import numpy as np
 import random
 
 #Training hyper parameters / initialized based on paper
-FRAME_PER_ACTION = 1
+FRAME_PER_ACTION = 2
 GAMMA = 0.95 #decay rate for Q
 OBSERVE_SET = 50000
 EXPLORE_SET = 1000000
-INIT_EPSILON = 0.3#1.0
+INIT_EPSILON = 1.0
 FINAL_EPSILON = 0.1
 REPLAY_MEMORY = 1000000 #previous transitions to store
 NB_EPOCHS = 32
@@ -29,10 +29,10 @@ class DQN:
 
     def __init__(self, actions):
 
-
         self.replayMemory = deque()
-        self.rewards = []
+        self.rewards = deque(maxlen=REPLAY_MEMORY)
         self.rewards_ph = tf.placeholder(tf.float32, name='rewards')
+        self.qvalues_ph = tf.placeholder(tf.float32, name='qvalues')
         self.timeStep = 0
         self.epsilon = INIT_EPSILON
         self.epsilon_ph = tf.placeholder(tf.float32, name='epsilon')
@@ -127,6 +127,7 @@ class DQN:
         tf.summary.scalar("Cost", self.cost)
 
         tf.summary.scalar("Average_reward", tf.reduce_mean(self.rewards_ph))
+        tf.summary.scalar("Average_Qvalue", tf.reduce_mean(self.qvalues_ph))
 
         self.trainStep = tf.train.RMSPropOptimizer(LEARNING_RATE, DECAY_RATE, 0.0, 1e-6).minimize(self.cost)
 
@@ -148,6 +149,7 @@ class DQN:
         for i in range(0, NB_EPOCHS):
             terminal = epoch[i][4]
             if terminal:
+                self.rewards.append(reward_epoch[i])
                 y_batch.append(reward_epoch[i])
             else:
                 y_batch.append(reward_epoch[i] + GAMMA * np.max(qValue_epoch[i]))
@@ -166,9 +168,10 @@ class DQN:
                 self.actionInput: action_epoch,
                 self.stateInput: state_epoch,
                 self.rewards_ph : self.rewards,
-                self.epsilon_ph : self.epsilon
+                self.epsilon_ph : self.epsilon,
+                self.qvalues_ph : qValue_epoch
             })
-            self.logger.add_summary(summary, self.timeStep)
+            self.logger.add_summary(summary, self.timeStep + 904000)
 
         #save every 10000 iterations
         if self.timeStep % 10000 == 0:
@@ -188,19 +191,14 @@ class DQN:
         if self.timeStep > OBSERVE_SET:
             self.train()
 
-        #save rewards pool for logging
-        self.rewards.append(reward)
-        if len(self.rewards) > REPLAY_MEMORY:
-            self.rewards = self.rewards[1:]
-
         #print status
-        state = ""
-        if self.timeStep <= OBSERVE_SET:
-            state = "observe"
-        elif self.timeStep > OBSERVE_SET and self.timeStep <= OBSERVE_SET + EXPLORE_SET:
-            state = "explore"
-        else:
-            state = "train"
+        # state = ""
+        # if self.timeStep <= OBSERVE_SET:
+        #     state = "observe"
+        # elif self.timeStep > OBSERVE_SET and self.timeStep <= OBSERVE_SET + EXPLORE_SET:
+        #     state = "explore"
+        # else:
+        #     state = "train"
 
         #console logging TODO
         # print("TIMESTEP ", self.timeStep, "/ STATE ", state, "/ EPSILON ", self.epsilon)
@@ -209,11 +207,11 @@ class DQN:
         self.timeStep += 1
 
     def getAction(self):
-        qValue = self.QValue.eval(feed_dict={self.stateInput: [self.currentState]})[0]
         action = np.zeros(self.actions)
 
         if self.timeStep % FRAME_PER_ACTION == 0:
             #choose an action if enough time has elapsed
+            qValue = self.QValue.eval(feed_dict={self.stateInput: [self.currentState]})[0]
             if random.random() <= self.epsilon:
                 action_i = random.randrange(self.actions)
                 action[action_i] = 1
@@ -221,7 +219,7 @@ class DQN:
                 action_i = np.argmax(qValue)
                 action[action_i] = 1
         else:
-            action[0] = 1 #don't act
+            action[-1] = 1 #don't act
 
         #update epsilon
         if self.epsilon > FINAL_EPSILON and self.timeStep > OBSERVE_SET:

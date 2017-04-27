@@ -7,13 +7,18 @@ import numpy as np
 import cv2
 
 
-def preprocess(observation):
-    # observation = cv2.resize(observation, (84, 100)) #cv2.cvtColor(, cv2.COLOR_BGR2GRAY)
+def preprocess(observation, first):
+    observation = cv2.resize(observation, (84, 84)) #cv2.cvtColor(, cv2.COLOR_BGR2GRAY)
+    #TODO
     # observation = observation[26:110, :]
-    # ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
-    return np.reshape(observation, (84,84,1))
+    ret, observation = cv2.threshold(observation, 100, 255, cv2.THRESH_BINARY)
+    # return np.reshape(observation, (84,84,1))
     # print(observation.shape)
-    # return observation
+
+    if first:
+        return observation
+    else:
+        return np.reshape(observation, (84, 84, 1))
 
 def playGame():
     # 1 - init game
@@ -21,6 +26,7 @@ def playGame():
     #game = Pong(height=84, width=84)
     p = PLE(game, fps=60, display_screen=True, reward_values={
         "positive": 2.0,
+        "negative": -2.0,
         "tick": 0.1
     })
     p.init()
@@ -31,13 +37,8 @@ def playGame():
 
 
     # 3 - play game
-    init_action = np.array([1, 0, 0, 0])
-    init_observation = p.getScreenGrayscale()
-    init_reward = p.score()
-    init_terminal = p.game_over()
-
+    init_observation = preprocess(p.getScreenGrayscale(), True)
     agent.setInitState(init_observation)
-
 
     while True:
         if p.game_over():
@@ -48,7 +49,7 @@ def playGame():
         p.act(legal_actions[action])
         reward = p.score() #p.act(action)
         # print(reward)
-        observation = preprocess(p.getScreenGrayscale())
+        observation = preprocess(p.getScreenGrayscale(), False)
         terminal = p.game_over()
 
         agent.setPerception(observation, action_list, reward, terminal)
